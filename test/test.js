@@ -1,4 +1,3 @@
-/*
 ========================================
 🧠 15-Minute Core JavaScript Practice
 ========================================
@@ -84,7 +83,6 @@ EXPECTED USAGE
 
 const result = analyzeScores(scores);
 console.log(result);
-*/
 
 
 function analyzeScores(scoresArray) {
