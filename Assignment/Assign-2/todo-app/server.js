@@ -1,46 +1,68 @@
 const express = require("express");
+const fs = require("fs");
 const path = require("path");
-
-const {
-  addTodo,
-  listTodos,
-  markDone,
-  deleteTodo
-} = require("./todos");
 
 const app = express();
 const PORT = 3000;
 
-// middleware
+const TODO_FILE = path.join(__dirname, "todos.json");
+
+/* ---------------- MIDDLEWARE ---------------- */
+
 app.use(express.json());
 app.use(express.static("public"));
 
-/* -------- API ROUTES -------- */
+/* ---------------- HELPERS ---------------- */
 
-// get all todos
+function readTodos() {
+  if (!fs.existsSync(TODO_FILE)) return [];
+  return JSON.parse(fs.readFileSync(TODO_FILE, "utf-8") || "[]");
+}
+
+function writeTodos(todos) {
+  fs.writeFileSync(TODO_FILE, JSON.stringify(todos, null, 2));
+}
+
+/* ---------------- ROUTES ---------------- */
+
 app.get("/api/todos", (req, res) => {
-  const fs = require("fs");
-  const data = fs.readFileSync("todos.json", "utf-8");
-  res.json(JSON.parse(data));
+  res.json(readTodos());
 });
 
-// add todo
 app.post("/api/todos", (req, res) => {
-  addTodo(req.body.task);
-  res.json({ success: true });
+  const todos = readTodos();
+
+  const newTodo = {
+    id: Date.now(),
+    task: req.body.task,
+    done: false
+  };
+
+  todos.push(newTodo);
+  writeTodos(todos);
+
+  res.json(newTodo);
 });
 
-// mark done
 app.put("/api/todos/:id", (req, res) => {
-  markDone(req.params.id);
+  const todos = readTodos();
+  const todo = todos.find(t => t.id == req.params.id);
+
+  if (!todo) return res.status(404).json({ error: "Not found" });
+
+  todo.done = !todo.done;
+  writeTodos(todos);
+
+  res.json(todo);
+});
+
+app.delete("/api/todos/:id", (req, res) => {
+  const todos = readTodos().filter(t => t.id != req.params.id);
+  writeTodos(todos);
   res.json({ success: true });
 });
 
-// delete todo
-app.delete("/api/todos/:id", (req, res) => {
-  deleteTodo(req.params.id);
-  res.json({ success: true });
-});
+/* ---------------- START SERVER ---------------- */
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
