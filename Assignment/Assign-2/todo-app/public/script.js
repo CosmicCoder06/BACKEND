@@ -83,6 +83,13 @@ async function deleteTodo(id) {
 fetchTodos()
 
 document.getElementById("addBtn").addEventListener("click", addTodo);
+document.getElementById("taskInput")
+  .addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTodo();
+    }
+  });
 
 
 
